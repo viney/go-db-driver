@@ -1,0 +1,136 @@
+package main
+
+import (
+	"database/sql"
+	_ "engine/go-oci8"
+	"fmt"
+	"os"
+	"sync"
+	_ "time"
+)
+
+/*var (
+	db  *sql.DB
+	mux sync.Mutex
+)*/
+
+var userTableSql string = `
+BEGIN
+    BEGIN
+         EXECUTE IMMEDIATE 'DROP TABLE user_profile';
+    EXCEPTION
+         WHEN OTHERS THEN
+                IF SQLCODE != -942 THEN
+                     RAISE;
+                END IF;
+    END;
+    EXECUTE IMMEDIATE 'CREATE TABLE user_profile (id int PRIMARY KEY, name VARCHAR(20) NOT NULL, created VARCHAR(20) NOT NULL)';
+END;
+`
+
+/*func init() {
+	mux.Lock()
+	defer mux.Unlock()
+
+	os.Setenv("NLS_LANG", "")
+
+	// check
+	if db != nil {
+		return
+	}
+
+	// open
+	oracledb, err := sql.Open("oci8", "viney/admin@sqtcall")
+	checkErr(err)
+
+	// new db
+	db = oracledb
+
+	// create database table
+	res, err := db.Exec(userTableSql)
+	checkErr(err)
+
+	result(res)
+}*/
+
+func checkErr(err error) {
+	if err != nil {
+		panic("oracle err:" + err.Error())
+	}
+	return
+}
+
+func open()sql.Db{
+	// open
+	oracledb, err := sql.Open("oci8", "viney/admin@sqtcall")
+	checkErr(err)
+}
+
+func close(){
+
+}
+
+func result(result sql.Result) {
+	// result
+	lastInsertId, err := result.LastInsertId()
+	checkErr(err)
+	fmt.Println(lastInsertId)
+
+	rowsAffected, err := result.RowsAffected()
+	checkErr(err)
+	fmt.Println(rowsAffected)
+	return
+}
+
+func insert() {
+	// insert
+	insertSql := `insert into user_profile(id,name,created) values(1,'viney','2006-01-02 15:04:05')`
+	res, err := db.Exec(insertSql)
+	checkErr(err)
+
+	result(res)
+}
+
+func update() {
+	// update
+	updateSql := `update user_profile set name='viney.chow' where id=1`
+	res, err = db.Exec(updateSql)
+	checkErr(err)
+
+	result(res)
+}
+
+func select(){
+    // select
+	querySql := `select * from user_profile where id=1`
+	rows, err := db.Query(querySql)
+
+	type user struct {
+		id      int
+		name    string
+		created string
+	}
+
+	var u = &user{}
+	for rows.Next() {
+		err = rows.Scan(
+			&u.id,
+			&u.name,
+			&u.created)
+		checkErr(err)
+	}
+
+	fmt.Println(*u)
+}
+
+func delete(){
+	// delete
+	deleteSql := `delete from user_profile where id=1`
+	res, err = db.Exec(deleteSql)
+	checkErr(err)
+
+	result(res)
+}
+
+func main() {
+}
